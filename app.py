@@ -17,19 +17,29 @@ def index():
 @app.route('/gpt3', methods=['POST'])
 def gpt3():
     prompt = request.form['prompt']
-    try:
-        response = openai.Completion.create(
-            engine="text-davinci-003",
-            prompt=prompt,
-            max_tokens=500,
+    
+    # Prepare the message history for the API
+    message_history = ["User: " + prompt]
+    
+    def get_openai_response(user_input, message_history):
+        # Convert message history to the format required by the API
+        api_messages = [{"role": msg.split(': ')[0].lower(), "content": msg.split(': ')[1]} for msg in message_history]
+
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=api_messages,
+            max_tokens=200,
+            temperature=0.1,
             n=1,
-            stop=None,
-            temperature=0.5,
+            stream=False
         )
-        return jsonify({"text": response.choices[0].text.strip()})
+        return response.choices[0].message['content']
+
+    try:
+        response_text = get_openai_response(prompt, message_history)
+        return jsonify({"text": response_text.strip()})
     except Exception as e:
         return jsonify({"error": str(e)})
-
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080)

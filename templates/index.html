@@ -59,7 +59,7 @@
   const commandInput = document.getElementById("command");
 
 function appendOutput(text) {
-  const outputElement = document.createElement("pre"); // Change "div" to "pre"
+  const outputElement = document.createElement("div"); // Change "div" to "pre"
   outputElement.textContent = text;
   terminal.appendChild(outputElement);
   terminal.scrollTop = terminal.scrollHeight;
