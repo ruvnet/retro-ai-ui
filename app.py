@@ -2,6 +2,7 @@ import openai
 import os
 from flask import Flask, render_template, request, jsonify, session
 from flask_session import Session
+from datetime import datetime, timedelta
 
 openai.api_key = os.environ.get("OPENAI_API_KEY")
 
