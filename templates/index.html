@@ -104,6 +104,7 @@ function appendOutput(text) {
       appendOutput("- /option1: Description of option 1");
       appendOutput("- /option2: Description of option 2");
       appendOutput("- /test: Test if the app is working correctly");
+      appendOutput("- /history: Display message history");
     } else if (command === "/test") {
       appendOutput("Testing prompt...");
       fetch("/gpt3", {
@@ -113,14 +114,31 @@ function appendOutput(text) {
         },
         body: new URLSearchParams({ prompt: "This is a test prompt." })
       })
-      .then((response) => response.json())
-      .then((data) => {
-        console.log(data); // error check
-        appendOutput(data.text);
-      })
-      .catch((error) => {
-        appendError(`Error: ${error.message}`);
-      });
+        .then((response) => response.json())
+        .then((data) => {
+          appendOutput(data.text);
+        })
+        .catch((error) => {
+          appendError(`Error: ${error.message}`);
+        });
+   } else if (command === "/history") {
+  fetch("/history")
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.history !== "No message history found in the current session.") {
+        const messageArray = data.history.split('\n');
+        messageArray.forEach((msg) => {
+          if (msg) {
+            appendOutput(msg);
+          }
+        });
+      } else {
+        appendOutput("No message history found.");
+      }
+    })
+    .catch((error) => {
+      appendError(`Error: ${error.message}`);
+    });
     } else {
       fetch("/gpt3", {
         method: "POST",
@@ -129,16 +147,17 @@ function appendOutput(text) {
         },
         body: new URLSearchParams({ prompt: command })
       })
-      .then((response) => response.json())
-      .then((data) => {
-        appendOutput(data.text);
-      })
-      .catch((error) => {
-        appendError(`Error: ${error.message}`);
-      });
+        .then((response) => response.json())
+        .then((data) => {
+          appendOutput(data.text);
+        })
+        .catch((error) => {
+          appendError(`Error: ${error.message}`);
+        });
     }
   }
 });
+
 </script>
 </body>
 </html>
