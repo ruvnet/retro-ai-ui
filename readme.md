@@ -1,4 +1,4 @@
-# Retro Console Creator
+# Retro Console & GPT Prompt Creator
 
 Retro Console Creator is a Flask web application that allows users to create prompts for OpenAI's GPT-3 language model, and generate responses using the same model.
 
