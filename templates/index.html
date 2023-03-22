@@ -1,93 +1,144 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Prompt Builder App</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css">
     <style>
-     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css">
-<style>
-    body {
+      body {
+        margin: 0;
         background-color: black;
         color: green;
         font-family: 'Courier New', monospace;
-      margin:0;
-    }
-    #terminal {
+      }
+
+      #terminal {
         background-color: black;
         padding: 20px;
         height: 80vh;
         overflow-y: scroll;
-        margin:0px; 
-    }
-    #input-container {
+        margin: 0; 
+      }
+
+      #input-container {
         position: fixed;
         bottom: 0;
         left: 0;
         right: 0;
         padding: 20px;
         background-color: black;
-    }
-    input {
+      }
+
+      input {
         background-color: black;
         color: green;
         border: none;
         outline: none;
         width: 100%;
-    }
-</style>
+      }
+
+      .fixed-bottom {
+        position: fixed;
+        bottom: 0;
+      }
+
+      .p-0 {
+        padding: 0;
+      }
+    </style>
 </head>
-<body>
-    <div id="terminal"></div>
-    <div id="input-container">
-        <input id="command" type="text" placeholder="What kind of prompt would you like to create? Type /help for a list of options.">
-    </div>
+<body class="m-0">
+  <div id="terminal"></div>
+  <div id="input-container">
+    <input id="command" type="text" placeholder="What kind of prompt would you like to create? Type /help for a list of options.">
+  </div>
 
-    <script>
-        const terminal = document.getElementById("terminal");
-        const commandInput = document.getElementById("command");
+  <script>
+  const terminal = document.getElementById("terminal");
+  const commandInput = document.getElementById("command");
 
-        function appendOutput(text) {
-            const outputElement = document.createElement("div");
-            outputElement.textContent = text;
-            terminal.appendChild(outputElement);
-            terminal.scrollTop = terminal.scrollHeight;
-        }
+function appendOutput(text) {
+  const outputElement = document.createElement("pre"); // Change "div" to "pre"
+  outputElement.textContent = text;
+  terminal.appendChild(outputElement);
+  terminal.scrollTop = terminal.scrollHeight;
+}
 
-        commandInput.addEventListener("keydown", (event) => {
-            if (event.key === "Enter") {
-                event.preventDefault();
-                const command = commandInput.value.trim();
-                appendOutput(`> ${command}`);
-                commandInput.value = "";
+  function appendError(text) {
+    const errorElement = document.createElement("div");
+    errorElement.classList.add("text-danger");
+    errorElement.textContent = text;
+    terminal.appendChild(errorElement);
+    terminal.scrollTop = terminal.scrollHeight;
+  }
 
-                // Handle commands
-                if (command === "/help") {
-                    appendOutput("List of available options: ");
-                    appendOutput("- /option1: Description of option 1");
-                    appendOutput("- /option2: Description of option 2");
-                } else {
-                    // Call GPT-3.5-turbo API with the command, and then append the output
-                    // appendOutput(response_from_API);
+  const welcomeMessage = "Welcome to Retro Console Creator! Type /help to see a list of available options.";
+  let currentIndex = 0;
 
-                  fetch("/gpt3", {
-    method: "POST",
-    headers: {
-        "Content-Type": "application/x-www-form-urlencoded"
-    },
-    body: new URLSearchParams({ prompt: command })
-})
-    .then((response) => response.json())
-    .then((data) => {
-        appendOutput(data);
-    })
-    .catch((error) => {
-        console.error("Error:", error);
-    });
+  function typeWelcomeMessage() {
+    if (currentIndex < welcomeMessage.length) {
+      const currentText = terminal.textContent;
+      const nextChar = welcomeMessage[currentIndex];
+      terminal.textContent = currentText + nextChar;
+      currentIndex++;
+      setTimeout(typeWelcomeMessage, 50);
+    } else {
+      terminal.innerHTML += "<br><br>> ";
+      commandInput.focus();
+    }
+  }
 
-                }
-            }
-        });
-    </script>
+  typeWelcomeMessage();
+
+ commandInput.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    const command = commandInput.value.trim();
+    appendOutput(`> ${command}`);
+    commandInput.value = "";
+
+    // Handle commands
+    if (command === "/help") {
+      appendOutput("List of available options: ");
+      appendOutput("- /option1: Description of option 1");
+      appendOutput("- /option2: Description of option 2");
+      appendOutput("- /test: Test if the app is working correctly");
+    } else if (command === "/test") {
+      appendOutput("Testing prompt...");
+      fetch("/gpt3", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: new URLSearchParams({ prompt: "This is a test prompt." })
+      })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log(data); // error check
+        appendOutput(data.text);
+      })
+      .catch((error) => {
+        appendError(`Error: ${error.message}`);
+      });
+    } else {
+      fetch("/gpt3", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: new URLSearchParams({ prompt: command })
+      })
+      .then((response) => response.json())
+      .then((data) => {
+        appendOutput(data.text);
+      })
+      .catch((error) => {
+        appendError(`Error: ${error.message}`);
+      });
+    }
+  }
+});
+</script>
 </body>
 </html>
