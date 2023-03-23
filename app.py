@@ -47,7 +47,7 @@ def gpt3():
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=api_messages,
-            max_tokens=200,
+            max_tokens=1200,
             temperature=0.85,
             n=1,
             stream=False

@@ -98,7 +98,7 @@ function appendError(text) {
 }
 
 function initializeTerminal() {
-    appendSystem("Welcome to the A Builder Terminal! Type your command or type /help for a list of available options.");
+    appendSystem("Welcome to the Ai Prompt Terminal! Type your command or type /help for a list of available options.");
    // appendSystem("Type your command or type /help for a list of available options.");
 }
 
@@ -109,6 +109,14 @@ commandInput.addEventListener("keydown", (event) => {
         appendOutput(`> ${command}`);
         commandInput.value = "";
 
+        const loadingElement = document.createElement("div");
+        loadingElement.textContent = "Thinking...";
+        terminal.appendChild(loadingElement);
+
+        const removeLoadingElement = () => {
+            terminal.removeChild(loadingElement);
+        };
+      
         // Handle commands
         if (command === "/help") {
             const interval = 30;
@@ -163,9 +171,11 @@ commandInput.addEventListener("keydown", (event) => {
             })
                                 .then((response) => response.json())
                 .then((data) => {
-                    appendOutput(data.text);
+                removeLoadingElement();
+                  appendOutput(data.text);
                 })
                 .catch((error) => {
+                removeLoadingElement();
                     appendError(`Error: ${error.message}`);
                 });
         }
