@@ -46,117 +46,133 @@
       .p-0 {
         padding: 0;
       }
+       .output {
+        color: green;
+    }
+    .system {
+        color: yellow;
+    }
+    .error {
+        color: red;
+    }
     </style>
 </head>
 <body class="m-0">
   <div id="terminal"></div>
   <div id="input-container">
-    <input id="command" type="text" placeholder="What kind of prompt would you like to create? Type /help for a list of options.">
+    <input id="command" type="text" placeholder="Enter Your Prompt">
   </div>
 
   <script>
   const terminal = document.getElementById("terminal");
-  const commandInput = document.getElementById("command");
+const commandInput = document.getElementById("command");
 
-function appendOutput(text) {
-  const outputElement = document.createElement("div"); // Change "div" to "pre"
-  outputElement.textContent = text;
-  terminal.appendChild(outputElement);
-  terminal.scrollTop = terminal.scrollHeight;
+function typeWriter(element, text, index, type, interval) {
+    if (index < text.length) {
+        element.textContent += text[index];
+        index++;
+        terminal.scrollTop = terminal.scrollHeight;
+        setTimeout(() => typeWriter(element, text, index, type, interval), interval);
+    } else {
+        element.classList.add(type);
+    }
 }
 
-  function appendError(text) {
-    const errorElement = document.createElement("div");
-    errorElement.classList.add("text-danger");
-    errorElement.textContent = text;
-    terminal.appendChild(errorElement);
-    terminal.scrollTop = terminal.scrollHeight;
-  }
+function appendOutput(text, type = 'output', interval = 30) {
+    const outputElement = document.createElement("div");
+    terminal.appendChild(outputElement);
+    typeWriter(outputElement, text, 0, type, interval);
+    setTimeout(() => {
+        terminal.scrollTop = terminal.scrollHeight;
+    }, interval * text.length);
+}
 
-  const welcomeMessage = "Welcome to Retro Console Creator! Type /help to see a list of available options.";
-  let currentIndex = 0;
+function appendSystem(text, delay = 0) {
+    setTimeout(() => {
+        appendOutput(text, 'system');
+    }, delay);
+}
 
-  function typeWelcomeMessage() {
-    if (currentIndex < welcomeMessage.length) {
-      const currentText = terminal.textContent;
-      const nextChar = welcomeMessage[currentIndex];
-      terminal.textContent = currentText + nextChar;
-      currentIndex++;
-      setTimeout(typeWelcomeMessage, 50);
-    } else {
-      terminal.innerHTML += "<br><br>> ";
-      commandInput.focus();
+function appendError(text) {
+    appendOutput(text, 'error');
+}
+
+function initializeTerminal() {
+    appendSystem("Welcome to the A Builder Terminal! Type your command or type /help for a list of available options.");
+   // appendSystem("Type your command or type /help for a list of available options.");
+}
+
+commandInput.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+        event.preventDefault();
+        const command = commandInput.value.trim();
+        appendOutput(`> ${command}`);
+        commandInput.value = "";
+
+        // Handle commands
+        if (command === "/help") {
+            const interval = 30;
+            const lineCount = 4;
+            const lineDelay = lineCount * interval * 2;
+            appendSystem("List of available options: ", 0);
+            appendSystem("- /option1: Description of option 1", lineDelay);
+            appendSystem("- /option2: Description of option 2", lineDelay * 2);
+            appendSystem("- /test: Test if the app is working correctly", lineDelay * 3);
+            appendSystem("- /history: Display message history", lineDelay * 4);
+        } else if (command === "/test") {
+            appendSystem("Testing prompt...");
+            fetch("/gpt3", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                body: new URLSearchParams({ prompt: "This is a test prompt." })
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    appendOutput(data.text);
+                })
+                .catch((error) => {
+                    appendError(`Error: ${error.message}`);
+                });
+        } else if (command === "/history") {
+            fetch("/history")
+                .then((response) => response.json())
+                .then((data) => {
+                    if (data.history !== "No message history found in the current session.") {
+                        const messageArray = data.history.split('\n');
+                        messageArray.forEach((msg) => {
+                            if (msg) {
+                                appendOutput(msg);
+                            }
+                        });
+                    } else {
+                        appendSystem("No message history found.");
+                    }
+                })
+                .catch((error) => {
+                    appendError(`Error: ${error.message}`);
+                });
+        } else {
+            fetch("/gpt3", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                body: new URLSearchParams({ prompt: command })
+            })
+                                .then((response) => response.json())
+                .then((data) => {
+                    appendOutput(data.text);
+                })
+                .catch((error) => {
+                    appendError(`Error: ${error.message}`);
+                });
+        }
     }
-  }
-
-  typeWelcomeMessage();
-
- commandInput.addEventListener("keydown", (event) => {
-  if (event.key === "Enter") {
-    event.preventDefault();
-    const command = commandInput.value.trim();
-    appendOutput(`> ${command}`);
-    commandInput.value = "";
-
-    // Handle commands
-    if (command === "/help") {
-      appendOutput("List of available options: ");
-      appendOutput("- /option1: Description of option 1");
-      appendOutput("- /option2: Description of option 2");
-      appendOutput("- /test: Test if the app is working correctly");
-      appendOutput("- /history: Display message history");
-    } else if (command === "/test") {
-      appendOutput("Testing prompt...");
-      fetch("/gpt3", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded"
-        },
-        body: new URLSearchParams({ prompt: "This is a test prompt." })
-      })
-        .then((response) => response.json())
-        .then((data) => {
-          appendOutput(data.text);
-        })
-        .catch((error) => {
-          appendError(`Error: ${error.message}`);
-        });
-   } else if (command === "/history") {
-  fetch("/history")
-    .then((response) => response.json())
-    .then((data) => {
-      if (data.history !== "No message history found in the current session.") {
-        const messageArray = data.history.split('\n');
-        messageArray.forEach((msg) => {
-          if (msg) {
-            appendOutput(msg);
-          }
-        });
-      } else {
-        appendOutput("No message history found.");
-      }
-    })
-    .catch((error) => {
-      appendError(`Error: ${error.message}`);
-    });
-    } else {
-      fetch("/gpt3", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded"
-        },
-        body: new URLSearchParams({ prompt: command })
-      })
-        .then((response) => response.json())
-        .then((data) => {
-          appendOutput(data.text);
-        })
-        .catch((error) => {
-          appendError(`Error: ${error.message}`);
-        });
-    }
-  }
 });
+
+initializeTerminal();
 
 </script>
 </body>
