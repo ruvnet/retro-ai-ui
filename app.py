@@ -65,6 +65,11 @@ def gpt3():
 
 import json
 
+@app.route('/clear_session', methods=['GET'])
+def clear_session():
+    session.clear()
+    return jsonify({"result": "Session cleared"})
+
 @app.route('/history')
 def history():
     if 'message_history' in session:
