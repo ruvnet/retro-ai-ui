@@ -1,0 +1,5 @@
+steps:
+  - name: OpenAI Action
+    uses: username/repo@tag
+    with:
+      openai_api_key: ${{ secrets.OPENAI_API_KEY }}
