@@ -1,5 +1,22 @@
-steps:
-  - name: OpenAI Action
-    uses: username/repo@tag
-    with:
-      openai_api_key: ${{ secrets.OPENAI_API_KEY }}
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.9
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+    - name: Deploy to GitHub Pages
+      env:
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      run: |
+        python app.py
